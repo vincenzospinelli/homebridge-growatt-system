@@ -30,7 +30,7 @@ HomeKit does not provide first-class solar energy characteristics for every metr
   "platform": "GrowattSystem",
   "name": "Growatt Solar",
   "token": "YOUR_GROWATT_OPENAPI_TOKEN",
-  "refreshInterval": 10,
+  "refreshInterval": 15,
   "showMonthlyEnergy": false,
   "showYearlyEnergy": false,
   "debugApi": false

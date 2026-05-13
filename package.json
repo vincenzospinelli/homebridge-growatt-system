@@ -1,6 +1,6 @@
 {
   "name": "homebridge-growatt-system",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Homebridge plugin for Growatt OpenAPI solar plants, inverters, and energy metrics.",
   "main": "index.js",
   "scripts": {

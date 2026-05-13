@@ -24,7 +24,7 @@
       "refreshInterval": {
         "title": "Refresh Interval",
         "type": "integer",
-        "default": 10,
+        "default": 15,
         "minimum": 5,
         "maximum": 60,
         "description": "Minutes between Growatt API updates. Lower values are more likely to hit Growatt rate limits."

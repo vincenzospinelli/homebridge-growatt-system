@@ -94,7 +94,7 @@ class GrowattSystemPlatform {
     this.isUpdating = false;
 
     this.token = this.config.token;
-    this.refreshIntervalMinutes = Math.max(Number(this.config.refreshInterval || 10), 5);
+    this.refreshIntervalMinutes = Math.max(Number(this.config.refreshInterval || 15), 5);
     this.refreshInterval = this.refreshIntervalMinutes * 60 * 1000;
     this.showMonthlyEnergy = Boolean(this.config.showMonthlyEnergy);
     this.showYearlyEnergy = Boolean(this.config.showYearlyEnergy);
@@ -257,9 +257,19 @@ class GrowattSystemPlatform {
     this.isUpdating = true;
     this.log.info(`Updating ${this.accessories.size} Growatt accessory/accessories.`);
 
+    const updateCache = {
+      plantDataByPlantId: new Map(),
+      plantInfoByPlantId: new Map(),
+    };
+
     try {
       for (const [key, accessory] of this.accessories.entries()) {
-        await this.updateAccessory(key, accessory);
+        await this.updateAccessory(key, accessory, updateCache);
+
+        if (Date.now() < this.rateLimitedUntil) {
+          break;
+        }
+
         await delay(750);
       }
     } finally {
@@ -267,7 +277,7 @@ class GrowattSystemPlatform {
     }
   }
 
-  async updateAccessory(key, accessory) {
+  async updateAccessory(key, accessory, updateCache = {}) {
     const plantId = accessory.context.plantId;
     const deviceSN = accessory.context.deviceSN;
 
@@ -278,9 +288,8 @@ class GrowattSystemPlatform {
     }
 
     try {
-      const plants = await this.client.listPlants(deviceSN);
-      const plantInfo = plants.find((plant) => String(plant.plant_id) === String(plantId)) || plants[0] || {};
-      const plantData = await this.client.getPlantData(plantId);
+      const plantInfo = await this.getCachedPlantInfo(plantId, deviceSN, updateCache);
+      const plantData = await this.getCachedPlantData(plantId, updateCache);
 
       const metrics = {
         currentPower: toNumber(plantInfo.current_power),
@@ -318,9 +327,41 @@ class GrowattSystemPlatform {
         `${isProducing ? 'producing' : 'idle'}`
       );
     } catch (error) {
-      this.handleApiError(error, `update for "${accessory.displayName}"`);
+      const rateLimited = this.handleApiError(error, `update for "${accessory.displayName}"`);
+
+      if (rateLimited) {
+        return;
+      }
+
       this.setAccessoryOffline(accessory);
     }
+  }
+
+  async getCachedPlantInfo(plantId, deviceSN, updateCache) {
+    const cache = updateCache.plantInfoByPlantId;
+
+    if (cache?.has(plantId)) {
+      return cache.get(plantId);
+    }
+
+    const plants = await this.client.listPlants(deviceSN);
+    const plantInfo = plants.find((plant) => String(plant.plant_id) === String(plantId)) || plants[0] || {};
+
+    cache?.set(plantId, plantInfo);
+    return plantInfo;
+  }
+
+  async getCachedPlantData(plantId, updateCache) {
+    const cache = updateCache.plantDataByPlantId;
+
+    if (cache?.has(plantId)) {
+      return cache.get(plantId);
+    }
+
+    const plantData = await this.client.getPlantData(plantId);
+
+    cache?.set(plantId, plantData);
+    return plantData;
   }
 
   setupServices(accessory) {
@@ -388,7 +429,7 @@ class GrowattSystemPlatform {
     if (RATE_LIMIT_MESSAGES.has(message)) {
       this.rateLimitedUntil = Date.now() + Math.max(this.refreshInterval, 5 * 60 * 1000);
       this.log.warn(`Growatt API rate limit during ${context}. Pausing requests until next interval.`);
-      return;
+      return true;
     }
 
     if (this.debugApi && error.apiResponse) {
@@ -396,6 +437,7 @@ class GrowattSystemPlatform {
     }
 
     this.log.warn(`Growatt ${context} failed: ${message}`);
+    return false;
   }
 
   scheduleDiscoveryRetry() {
@@ -430,13 +472,23 @@ function makeAccessoryName(plantName, deviceType, deviceSN, deviceCount) {
   }
 
   const serialSuffix = String(deviceSN).slice(-4);
-  const suffix = cleanHomeKitName(`${deviceType} ${serialSuffix}`);
+  const suffix = cleanHomeKitName(`${cleanDeviceTypeName(deviceType)} ${serialSuffix}`);
   const maxPlantNameLength = Math.max(1, 64 - suffix.length - 3);
   const baseName = plantName.length > maxPlantNameLength
     ? plantName.slice(0, maxPlantNameLength).trim()
     : plantName;
 
   return cleanHomeKitName(`${baseName} - ${suffix}`);
+}
+
+function cleanDeviceTypeName(deviceType) {
+  const name = cleanHomeKitName(deviceType);
+
+  if (!name || name.length < 3 || /^\d+$/.test(name)) {
+    return 'Device';
+  }
+
+  return name;
 }
 
 function cleanHomeKitName(name) {
