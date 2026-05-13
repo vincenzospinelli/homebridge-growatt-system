@@ -173,14 +173,18 @@ class GrowattSystemPlatform {
           continue;
         }
 
+        const deviceType = device.type || device.device_type || 'Growatt device';
+        const accessoryName = makeAccessoryName(plantName, deviceType, String(deviceSN), devices.length);
         const key = makeAccessoryKey(plantId, deviceSN);
         activeKeys.add(key);
+        this.log.info(`Discovered Growatt device "${accessoryName}" (${deviceType}, SN ${deviceSN}).`);
         this.createOrUpdateAccessory({
           key,
           plantId,
           plantName,
+          accessoryName,
           deviceSN: String(deviceSN),
-          deviceType: device.type || device.device_type || 'Growatt device',
+          deviceType,
           manufacturer: device.manufacturer || 'Growatt',
         });
       }
@@ -194,18 +198,19 @@ class GrowattSystemPlatform {
     let accessory = this.accessories.get(device.key);
 
     if (!accessory) {
-      this.log.info(`Adding Growatt accessory "${device.plantName}".`);
-      accessory = new PlatformAccessory(device.plantName, uuid);
+      this.log.info(`Adding Growatt accessory "${device.accessoryName}".`);
+      accessory = new PlatformAccessory(device.accessoryName, uuid);
       this.accessories.set(device.key, accessory);
       this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
     } else {
-      this.log.info(`Updating Growatt accessory "${device.plantName}".`);
-      accessory.displayName = device.plantName;
+      this.log.info(`Updating Growatt accessory "${device.accessoryName}".`);
+      accessory.displayName = device.accessoryName;
     }
 
     accessory.context.growattKey = device.key;
     accessory.context.plantId = device.plantId;
     accessory.context.plantName = device.plantName;
+    accessory.context.accessoryName = device.accessoryName;
     accessory.context.deviceSN = device.deviceSN;
     accessory.context.deviceType = device.deviceType;
     accessory.context.manufacturer = device.manufacturer;
@@ -417,6 +422,21 @@ class GrowattSystemPlatform {
 
 function makeAccessoryKey(plantId, deviceSN) {
   return `${plantId}-${deviceSN}`;
+}
+
+function makeAccessoryName(plantName, deviceType, deviceSN, deviceCount) {
+  if (deviceCount <= 1) {
+    return plantName;
+  }
+
+  const serialSuffix = String(deviceSN).slice(-4);
+  const suffix = cleanHomeKitName(`${deviceType} ${serialSuffix}`);
+  const maxPlantNameLength = Math.max(1, 64 - suffix.length - 3);
+  const baseName = plantName.length > maxPlantNameLength
+    ? plantName.slice(0, maxPlantNameLength).trim()
+    : plantName;
+
+  return cleanHomeKitName(`${baseName} - ${suffix}`);
 }
 
 function cleanHomeKitName(name) {

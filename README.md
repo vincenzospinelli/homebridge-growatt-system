@@ -40,6 +40,7 @@ HomeKit does not provide first-class solar energy characteristics for every metr
 ## Development Notes
 
 - Accessory identity uses `plantId-deviceSN`.
+- If a plant has multiple devices, accessory names include device type and a serial suffix to avoid duplicate names in HomeKit.
 - Cached accessory keys and active discovery keys use the same format.
 - Refresh interval has a 5 minute minimum.
 - `error_frequently_access` pauses updates until the next interval.
