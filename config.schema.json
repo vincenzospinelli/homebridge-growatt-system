@@ -1,66 +1,83 @@
 {
-  "pluginAlias": "GrowattInversor",
+  "pluginAlias": "GrowattSystem",
   "pluginType": "platform",
   "singular": false,
-  "headerDisplay": "🌞 <h3>Homebridge Growatt Platform</h3><p>Este plugin conecta <strong>todos os seus inversores solares Growatt</strong> ao Apple HomeKit automaticamente!</p><p><strong>📡 Funcionalidade:</strong></p><ul><li>🔍 <strong>Descoberta automática</strong> - Busca todos os inversores da sua conta</li><li>📊 <strong>Múltiplos inversores</strong> - Cada inversor vira um acessório separado</li><li>🏠 <strong>4 sensores por inversor:</strong> Potência atual, Energia hoje, Energia total, Status online</li></ul><p><strong>⚠️ Importante:</strong> Agora você só precisa do TOKEN - os inversores são descobertos automaticamente!</p>",
-  "footerDisplay": "<div style='background: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 4px solid #28a745; margin-top: 20px;'><h4>🔑 Como obter seu Token:</h4><ol><li><strong>Acesse:</strong> <a href='https://openapi.growatt.com' target='_blank'>https://openapi.growatt.com</a></li><li><strong>Faça login</strong> com suas credenciais Growatt</li><li><strong>Vá em API Token</strong> e gere/copie seu token de acesso</li><li><strong>Cole o token abaixo</strong> - pronto! O plugin encontrará todos os inversores automaticamente</li></ol><p><strong>✨ Novidade:</strong> Não precisa mais do Plant ID - o plugin descobre todos os inversores da sua conta!</p></div>",
+  "headerDisplay": "<h3>Homebridge Growatt System</h3><p>Connects Growatt OpenAPI plants and devices to HomeKit with stable accessory IDs and rate-limit aware updates.</p>",
+  "footerDisplay": "<p>Get a token from <a href=\"https://openapi.growatt.com\" target=\"_blank\">Growatt OpenAPI</a>, then restart Homebridge after saving.</p>",
   "schema": {
     "type": "object",
     "properties": {
       "name": {
-        "title": "🏷️ Nome da Plataforma",
+        "title": "Platform Name",
         "type": "string",
         "default": "Growatt Solar",
         "required": true,
-        "description": "Nome da plataforma que aparecerá nos logs do Homebridge.",
         "minLength": 1,
         "maxLength": 50
       },
       "token": {
-        "title": "🔑 Token da API Growatt",
+        "title": "Growatt API Token",
         "type": "string",
         "required": true,
-        "description": "Token de acesso obtido no portal de desenvolvedores da Growatt. O plugin usará este token para descobrir todos os seus inversores automaticamente.",
-        "placeholder": "Ex: 4ox09d7r9d1n5k9ee3yqj60699319k9x",
-        "minLength": 20,
-        "pattern": "^[a-zA-Z0-9]+$"
+        "minLength": 20
       },
-
       "refreshInterval": {
-        "title": "⏱️ Intervalo de Atualização (minutos)",
+        "title": "Refresh Interval",
         "type": "integer",
-        "default": 5,
-        "minimum": 3,
+        "default": 10,
+        "minimum": 5,
         "maximum": 60,
-        "description": "Intervalo em minutos para buscar novos dados da API. Valores muito baixos podem exceder limites da API."
+        "description": "Minutes between Growatt API updates. Lower values are more likely to hit Growatt rate limits."
+      },
+      "showMonthlyEnergy": {
+        "title": "Show Monthly Energy",
+        "type": "boolean",
+        "default": false
+      },
+      "showYearlyEnergy": {
+        "title": "Show Yearly Energy",
+        "type": "boolean",
+        "default": false
+      },
+      "debugApi": {
+        "title": "Debug API Responses",
+        "type": "boolean",
+        "default": false
       }
     },
-    "required": ["name", "token"]
+    "required": [
+      "name",
+      "token"
+    ]
   },
   "layout": [
     {
       "type": "fieldset",
-      "title": "⚙️ Configurações Básicas",
+      "title": "Basic Settings",
       "expandable": false,
       "items": [
-        "name"
-      ]
-    },
-    {
-      "type": "fieldset", 
-      "title": "🔐 Token da API Growatt",
-      "expandable": false,
-      "items": [
-        "token"
+        "name",
+        "token",
+        "refreshInterval"
       ]
     },
     {
       "type": "fieldset",
-      "title": "🔧 Configurações Avançadas", 
+      "title": "Optional Metrics",
       "expandable": true,
       "expanded": false,
       "items": [
-        "refreshInterval"
+        "showMonthlyEnergy",
+        "showYearlyEnergy"
+      ]
+    },
+    {
+      "type": "fieldset",
+      "title": "Diagnostics",
+      "expandable": true,
+      "expanded": false,
+      "items": [
+        "debugApi"
       ]
     }
   ]

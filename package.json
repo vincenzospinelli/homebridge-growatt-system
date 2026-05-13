@@ -1,52 +1,37 @@
 {
-  "name": "homebridge-growatt-inversor",
-  "version": "1.2.16",
-  "description": "Plugin Homebridge para monitorar inversores solares Growatt no Apple HomeKit",
+  "name": "homebridge-growatt-system",
+  "version": "0.1.0",
+  "description": "Homebridge plugin for Growatt OpenAPI solar plants, inverters, and energy metrics.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node -c index.js"
   },
   "keywords": [
     "homebridge",
     "homebridge-plugin",
     "growatt",
     "solar",
-    "inversor",
     "inverter",
     "energy",
-    "homekit",
-    "apple",
-    "smart-home",
-    "iot",
-    "energia-solar"
+    "homekit"
   ],
   "engines": {
     "node": ">=18.20.4",
     "homebridge": "^1.6.0 || ^2.0.0"
   },
   "author": {
-    "name": "Felipe Santos",
-    "email": "jfcardososantos@gmail.com"
+    "name": "Vincenzo Spinelli"
   },
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/jfcardososantos/homebridge-growatt-inversor.git"
-  },
-  "bugs": {
-    "url": "https://github.com/jfcardososantos/homebridge-growatt-inversor/issues"
-  },
-  "homepage": "https://github.com/jfcardososantos/homebridge-growatt-inversor#readme",
   "dependencies": {
-    "axios": "^1.6.2"
+    "axios": "^1.16.0"
   },
-  "devDependencies": {},
   "peerDependencies": {
     "homebridge": "^1.6.0 || ^2.0.0"
   },
   "homebridge": {
-    "pluginName": "homebridge-growatt-inversor",
-    "displayName": "Homebridge Growatt Inversor",
+    "pluginName": "homebridge-growatt-system",
+    "displayName": "Homebridge Growatt System",
     "supportsBridge": true
   }
 }
